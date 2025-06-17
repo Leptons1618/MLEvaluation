@@ -10,10 +10,10 @@ import lime
 import lime.lime_tabular
 import matplotlib.pyplot as plt
 from typing import Dict, Any, Tuple, Optional
-from .config import SHAP_SAMPLE_SIZE, SHAP_BACKGROUND_SIZE
-from .model_handler import is_pipeline_model, is_tree_based_model, get_model_name
-from .data_handler import ensure_dataframe
-from .logging_config import get_logger
+from utils.config import SHAP_SAMPLE_SIZE, SHAP_BACKGROUND_SIZE
+from utils.model_handler import is_pipeline_model, is_tree_based_model, get_model_name
+from utils.data_handler import ensure_dataframe
+from utils.logging_config import get_logger
 
 logger = get_logger('explanation')
 

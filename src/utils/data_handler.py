@@ -7,8 +7,8 @@ import numpy as np
 from sklearn.datasets import load_iris, load_wine, load_breast_cancer
 from sklearn.model_selection import train_test_split
 from typing import Tuple, Dict, Any
-from .config import DATASETS, RANDOM_STATE, TEST_SIZE
-from .logging_config import get_logger
+from utils.config import DATASETS, RANDOM_STATE, TEST_SIZE
+from utils.logging_config import get_logger
 
 logger = get_logger('data')
 

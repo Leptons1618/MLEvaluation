@@ -1,2 +1,0 @@
-2025-06-16 14:10:43,763 - ml_evaluation - ERROR - test_logging_setup:28 - Application logger test - error level
-2025-06-16 15:18:57,369 - ml_evaluation.explanation - ERROR - <module>:586 - Error generating SHAP summary plot: The beeswarm plot does not support plotting explanations with instances that have more than one dimension!

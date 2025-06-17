@@ -12,8 +12,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from typing import Dict, Any, Tuple
-from .config import MODELS, RANDOM_STATE, N_ESTIMATORS
-from .logging_config import get_logger
+from utils.config import MODELS, RANDOM_STATE, N_ESTIMATORS
+from utils.logging_config import get_logger
 
 logger = get_logger('model')
 
