@@ -3,3 +3,4 @@ __pycache__/
 # Ignore Virtual Environment directories
 .venv/
 logs/*.log
+.mleval/
