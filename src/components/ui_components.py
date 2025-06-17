@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 from typing import Dict, Any, Optional
-from ..utils.config import APP_TITLE, DATASETS, MODELS
-from ..utils.logging_config import get_logger
+from utils.config import APP_TITLE, DATASETS, MODELS
+from utils.logging_config import get_logger
 
 logger = get_logger('ui')
 
