@@ -260,8 +260,21 @@ def render_data_upload_page():
     st.title("📁 Dataset Upload & Preparation")
     st.markdown("*Upload your own dataset and prepare it for machine learning analysis*")
     
+    # Enhanced imports
+    try:
+        from components.enhanced_ui_components import (
+            render_editable_column_types, 
+            render_enhanced_quality_report,
+            render_operation_tracker,
+            render_advanced_feature_selection
+        )
+        enhanced_features_available = True
+    except ImportError:
+        enhanced_features_available = False
+        st.warning("⚠️ Enhanced features not available. Some advanced options may be limited.")
+    
     # Progress indicator
-    progress_col1, progress_col2, progress_col3, progress_col4 = st.columns(4)
+    progress_col1, progress_col2, progress_col3, progress_col4, progress_col5 = st.columns(5)
     
     with progress_col1:
         upload_status = "✅" if 'uploaded_df' in st.session_state else "⏳"
@@ -272,12 +285,16 @@ def render_data_upload_page():
         st.markdown(f"**{analyze_status} 2. Analyze**")
     
     with progress_col3:
-        quality_status = "✅" if 'dataset_analysis' in st.session_state else "⏳"
-        st.markdown(f"**{quality_status} 3. Quality Check**")
+        quality_status = "✅" if 'enhanced_quality_done' in st.session_state else "⏳"
+        st.markdown(f"**{quality_status} 3. Quality & Types**")
     
     with progress_col4:
+        feature_status = "✅" if 'feature_selection_done' in st.session_state else "⏳"
+        st.markdown(f"**{feature_status} 4. Features**")
+    
+    with progress_col5:
         prep_status = "✅" if 'prepared_dataset' in st.session_state else "⏳"
-        st.markdown(f"**{prep_status} 4. Prepare**")
+        st.markdown(f"**{prep_status} 5. Prepare**")
     
     st.markdown("---")
     
@@ -299,6 +316,20 @@ def render_data_upload_page():
         • CSV files (.csv)
         • Excel files (.xlsx, .xls)
         
+        **Enhanced Features:**        • Editable column types
+        • Advanced quality analysis
+        • Smart feature selection
+        • Operation tracking
+        """)
+    
+    # Sample datasets info
+    if st.expander("📋 Sample Datasets Available", expanded=False):
+        st.markdown("""
+        **🧪 Test with sample datasets:**
+        1. `problematic_dataset.csv` - Multiple issues for testing auto-preparation
+        2. `missing_values_dataset.csv` - Heavy missing data scenarios  
+        3. `single_class_dataset.csv` - Stratification error examples
+        
         **Requirements:**
         • First row should contain column headers
         • Data should be clean and structured
@@ -314,9 +345,7 @@ def render_data_upload_page():
             return None
         
         if df is not None:
-            show_success_message(f"✅ Successfully loaded **{uploaded_file.name}**")
-            
-            # Store in session state
+            show_success_message(f"✅ Successfully loaded **{uploaded_file.name}**")            # Store in session state and analyze
             st.session_state.uploaded_df = df
             st.session_state.uploaded_filename = uploaded_file.name
             
@@ -325,20 +354,72 @@ def render_data_upload_page():
                 analysis = analyze_dataset(df)
                 st.session_state.dataset_analysis = analysis
             
-            # Create tabs for better organization
-            tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🔍 Data Preview", "🎯 Quality Report", "🔧 ML Preparation"])
+            # Store original dataset for tracking
+            if 'original_df' not in st.session_state:
+                st.session_state.original_df = df.copy()
+                st.session_state.modified_df = df.copy()
+            
+            # Create enhanced tabs for better organization
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+                "📊 Overview", 
+                "🔧 Column Types", 
+                "📋 Quality Report", 
+                "📄 Data Preview",
+                "🎯 Feature Selection", 
+                "🚀 ML Preparation"
+            ])
             
             with tab1:
                 render_dataset_overview(df, analysis)
             
             with tab2:
-                render_paginated_data(df)
+                if enhanced_features_available:
+                    # Use current modified dataframe
+                    current_df = st.session_state.get('modified_df', df)
+                    current_analysis = analyze_dataset(current_df)
+                    df_modified = render_editable_column_types(current_df, current_analysis)
             
             with tab3:
-                render_data_quality_report(df, analysis)
+                if enhanced_features_available:
+                    current_df = st.session_state.get('modified_df', df)
+                    current_analysis = analyze_dataset(current_df)
+                    render_enhanced_quality_report(current_df, current_analysis)
+                    render_operation_tracker()
+                else:
+                    render_data_quality_report(df, analysis)
             
             with tab4:
-                render_dataset_preparation(df, analysis)
+                current_df = st.session_state.get('modified_df', df)
+                render_paginated_data(current_df)
+            
+            with tab5:
+                if enhanced_features_available:
+                    current_df = st.session_state.get('modified_df', df)
+                    
+                    # Target column selection first
+                    suggested_targets = detect_target_column(current_df, analyze_dataset(current_df))
+                    
+                    target_column = st.selectbox(
+                        "🎯 Select Target Column",
+                        options=current_df.columns.tolist(),
+                        index=current_df.columns.tolist().index(suggested_targets[0]) if suggested_targets else 0,
+                        help="Choose the column you want to predict"
+                    )
+                    
+                    if suggested_targets:
+                        st.info(f"💡 Suggested target columns: {', '.join(suggested_targets)}")
+                    
+                    if target_column:
+                        render_advanced_feature_selection(current_df, target_column)
+                        st.session_state.target_column = target_column
+                        st.session_state.feature_selection_done = True
+                else:
+                    st.info("⚠️ Enhanced feature selection requires advanced components.")
+            
+            with tab6:
+                current_df = st.session_state.get('modified_df', df)
+                current_analysis = analyze_dataset(current_df)
+                render_dataset_preparation(current_df, current_analysis)
             
             return df
     

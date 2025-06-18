@@ -24,6 +24,55 @@ except ImportError:
 logger = get_logger('data_preparation_enhanced')
 
 
+def safe_mean(series: pd.Series) -> float:
+    """Calculate mean in an Arrow-safe way"""
+    try:
+        # Convert to numpy array to avoid Arrow issues
+        clean_values = series.dropna().values
+        if len(clean_values) == 0:
+            return 0.0
+        return float(np.mean(clean_values))
+    except Exception:
+        return 0.0
+
+
+def safe_median(series: pd.Series) -> float:
+    """Calculate median in an Arrow-safe way"""
+    try:
+        # Convert to numpy array to avoid Arrow issues
+        clean_values = series.dropna().values
+        if len(clean_values) == 0:
+            return 0.0
+        return float(np.median(clean_values))
+    except Exception:
+        return 0.0
+
+
+def safe_mode(series: pd.Series):
+    """Calculate mode in an Arrow-safe way"""
+    try:
+        # For numeric columns
+        if series.dtype in ['int64', 'float64', 'Int64', 'Float64']:
+            clean_values = series.dropna().values
+            if len(clean_values) == 0:
+                return 0.0
+            # Use scipy.stats.mode for better performance
+            try:
+                from scipy import stats
+                mode_result = stats.mode(clean_values, keepdims=False)
+                return float(mode_result.mode)
+            except ImportError:
+                # Fallback to pandas mode
+                mode_series = pd.Series(clean_values).mode()
+                return float(mode_series.iloc[0]) if len(mode_series) > 0 else 0.0
+        else:
+            # For categorical columns
+            mode_series = series.mode()
+            return mode_series.iloc[0] if len(mode_series) > 0 else 'Unknown'
+    except Exception:
+        return 'Unknown' if series.dtype == 'object' else 0.0
+
+
 class DataPreparationTools:
     """Enhanced data preparation toolkit with automated suggestions"""
     
@@ -416,12 +465,11 @@ class DataPreparationTools:
                 categorical_cols = X.select_dtypes(include=['object', 'category']).columns
                 
                 imputed_features = []
-                
-                # Impute numeric features with median
+                  # Impute numeric features with median
                 if len(numeric_cols) > 0:
                     for col in numeric_cols:
                         if X[col].isnull().sum() > 0:
-                            median_val = X[col].median()
+                            median_val = safe_median(X[col])
                             df_result[col] = df_result[col].fillna(median_val)
                             imputed_features.append(f"{col} (median)")
                 
@@ -429,7 +477,7 @@ class DataPreparationTools:
                 if len(categorical_cols) > 0:
                     for col in categorical_cols:
                         if X[col].isnull().sum() > 0:
-                            mode_val = X[col].mode().iloc[0] if len(X[col].mode()) > 0 else 'Unknown'
+                            mode_val = safe_mode(X[col])
                             df_result[col] = df_result[col].fillna(mode_val)
                             imputed_features.append(f"{col} (mode)")
                 
