@@ -38,7 +38,9 @@ from components.ui_components import (
     show_success_message,
     show_error_message,
     show_info_message,
-    show_warning_message
+    show_warning_message,
+    render_data_upload_page,
+    render_navigation_sidebar
 )
 
 warnings.filterwarnings('ignore', category=UserWarning)
@@ -62,33 +64,125 @@ def main():
     """Main application function"""
     app_logger.info("Main application started")
     
+    # Navigation
+    current_page = render_navigation_sidebar()
+    
+    if current_page == "data_upload":
+        render_data_upload_page()
+        return
+    
+    # Original model analysis page
+    render_model_analysis_page()
+
+
+def render_model_analysis_page():
+    """Render the enhanced model analysis page"""
     # Render header
     render_header()
     
-    # Render sidebar and get user selections
-    selections = render_sidebar()
-    selected_dataset = selections['dataset']
-    selected_model = selections['model']
+    # Dataset source selection with better UI
+    st.markdown("### 🎯 Select Your Data Source")
     
-    if not selected_dataset or not selected_model:
-        st.info("👈 Please select a dataset and model from the sidebar to begin.")
-        return
+    source_col1, source_col2 = st.columns(2)
     
-    app_logger.info(f"User selected dataset: {selected_dataset}, model: {selected_model}")
+    with source_col1:
+        dataset_source = st.radio(
+            "Choose dataset source:",
+            options=["🗂️ Built-in Datasets", "📁 My Uploaded Dataset"],
+            horizontal=False,
+            help="Select whether to use built-in sample datasets or your own uploaded data"
+        )
     
-    # Load dataset
-    try:
-        with show_loading_message("Loading dataset..."):
-            dataset_info = load_dataset(selected_dataset)
-        show_success_message(f"Dataset '{dataset_info['config']['name']}' loaded successfully!")
+    with source_col2:
+        if dataset_source == "📁 My Uploaded Dataset":
+            if 'prepared_dataset' in st.session_state and st.session_state.get('use_uploaded_dataset', False):
+                dataset_info = st.session_state.prepared_dataset
+                st.success(f"✅ **Ready to use:** {dataset_info['config']['name']}")
+                st.info(f"📊 {dataset_info['config']['features']} features, {dataset_info['config']['classes']} classes")
+            else:
+                st.warning("⚠️ **No dataset prepared**")
+                st.info("👆 Go to 'Data Upload & Prep' to upload your data first")
+        else:
+            st.info("🗂️ **Built-in datasets available:**\n• Iris (flowers)\n• Wine (quality)\n• Breast Cancer (medical)")
+    
+    st.markdown("---")
+    
+    if dataset_source == "📁 My Uploaded Dataset":
+        if 'prepared_dataset' not in st.session_state or not st.session_state.get('use_uploaded_dataset', False):
+            st.error("❌ **No prepared dataset found**")
+            st.markdown("""
+            **Next Steps:**
+            1. 👆 Navigate to **'📁 Data Upload & Prep'** page using the sidebar
+            2. 📤 Upload your dataset (CSV or Excel)
+            3. 🔧 Prepare it for machine learning
+            4. 🔄 Return here to train models and generate explanations
+            """)
+            
+            if st.button("🚀 Go to Data Upload Page", type="primary"):
+                st.session_state.current_page = "data_upload"
+                st.rerun()
+            return
         
-        # Render dataset information
-        render_dataset_info(dataset_info)
+        # Use uploaded dataset
+        dataset_info = st.session_state.prepared_dataset
+        selected_dataset = "uploaded"
         
-    except Exception as e:
-        app_logger.error(f"Error loading dataset {selected_dataset}: {str(e)}")
-        show_error_message(f"Error loading dataset: {str(e)}")
-        return
+        st.success(f"🎯 **Using uploaded dataset:** {dataset_info['config']['name']}")
+        
+        # Model selection for uploaded dataset
+        st.markdown("### 🤖 Model Selection")
+        from utils.config import MODELS
+        model_options = {name: config['name'] for name, config in MODELS.items()}
+        
+        model_col1, model_col2 = st.columns([2, 1])
+        
+        with model_col1:
+            selected_model = st.selectbox(
+                "Choose a machine learning model:",
+                options=list(model_options.keys()),
+                format_func=lambda x: model_options[x],
+                help="Select the machine learning model to train and explain"
+            )
+        
+        with model_col2:
+            if selected_model:
+                model_config = MODELS[selected_model]
+                st.info(f"""
+                **{model_config['name']}**
+                Type: {model_config['type'].title()}
+                Feature Importance: {'✓' if model_config['supports_feature_importance'] else '✗'}
+                """)
+        
+        if not selected_model:
+            st.info("� Please select a model to begin training and analysis.")
+            return
+        
+    else:
+        # Use built-in datasets with enhanced sidebar
+        st.markdown("### ⚙️ Configuration")
+        selections = render_sidebar()
+        selected_dataset = selections['dataset']
+        selected_model = selections['model']
+        
+        if not selected_dataset or not selected_model:
+            st.info("👈 Please select a dataset and model from the sidebar to begin.")
+            return
+        
+        app_logger.info(f"User selected dataset: {selected_dataset}, model: {selected_model}")
+        
+        # Load dataset
+        try:
+            with show_loading_message("Loading dataset..."):
+                dataset_info = load_dataset(selected_dataset)
+            show_success_message(f"Dataset '{dataset_info['config']['name']}' loaded successfully!")
+            
+        except Exception as e:
+            app_logger.error(f"Error loading dataset {selected_dataset}: {str(e)}")
+            show_error_message(f"Error loading dataset: {str(e)}")
+            return
+    
+    # Render dataset information
+    render_dataset_info(dataset_info)
     
     # Train model
     try:

@@ -6,11 +6,19 @@ A comprehensive tool for model interpretation and explainability assessment with
 
 - **Multiple Explanation Methods**: SHAP, LIME, and Feature Importance
 - **Robust SHAP Implementation**: Automatic fallbacks for all model types
-- **Interactive UI**: User-friendly Streamlit interface
+- **Enhanced Interactive UI**: Modern Streamlit interface with improved navigation
+- **Auto Data Preparation**: Intelligent data preparation with issue detection and auto-fixes
+- **Data Upload & Preparation**: Upload your own datasets with interactive preparation
+- **Stratification Error Handling**: Automatic detection and resolution of common ML errors
+- **Smart Recommendations**: AI-powered suggestions for data quality improvements
+- **Advanced Pagination**: Efficient data browsing with controls below tables
+- **Smart Navigation**: Multi-page app with status tracking and progress indicators
+- **Data Quality Analysis**: Comprehensive data quality reports and recommendations
 - **Comprehensive Logging**: Detailed logging for debugging and monitoring
-- **Multiple Datasets**: Iris, Wine, and Breast Cancer datasets
+- **Multiple Datasets**: Built-in datasets (Iris, Wine, Breast Cancer) + Upload custom data
 - **Various Models**: Random Forest, Gradient Boosting, Logistic Regression, SVM
 - **Real-time Predictions**: Interactive prediction with explanations
+- **Multi-page Navigation**: Separate pages for model analysis and data upload
 
 ## 📁 Project Structure
 
@@ -27,6 +35,7 @@ MLEvaluation/
 │       ├── config.py             # Configuration settings
 │       ├── logging_config.py     # Logging configuration
 │       ├── data_handler.py       # Data loading and processing
+│       ├── data_preparation.py   # Data upload and preparation utilities
 │       ├── model_handler.py      # Model creation and training
 │       └── explanation_handler.py # SHAP, LIME, and explanations
 ├── tests/                        # Test files
@@ -51,6 +60,7 @@ MLEvaluation/
 ├── .venv/                        # Virtual environment
 ├── main.py                       # Legacy main file (for compatibility)
 ├── run_app.py                    # Application runner script
+├── sample_*.csv                  # Sample datasets for upload testing
 └── requirements.txt              # Python dependencies
 ```
 
@@ -95,11 +105,31 @@ streamlit run main.py
 
 ### Using the Application
 
-1. **Select Dataset**: Choose from Iris, Wine, or Breast Cancer datasets
-2. **Select Model**: Choose from Random Forest, Gradient Boosting, Logistic Regression, or SVM
-3. **View Performance**: See training and test accuracy metrics
-4. **Make Predictions**: Adjust feature values and see real-time predictions
-5. **Explain Predictions**: Choose from SHAP, LIME, or Feature Importance explanations
+#### Model Analysis (Main Page)
+1. **Select Dataset Source**: Choose between built-in datasets or uploaded dataset
+2. **Built-in Datasets**: Choose from Iris, Wine, or Breast Cancer datasets
+3. **Select Model**: Choose from Random Forest, Gradient Boosting, Logistic Regression, or SVM
+4. **View Performance**: See training and test accuracy metrics
+5. **Make Predictions**: Adjust feature values and see real-time predictions
+6. **Explain Predictions**: Choose from SHAP, LIME, or Feature Importance explanations
+
+#### Data Upload & Preparation (New Feature!)
+1. **Navigate to Data Upload**: Use the sidebar navigation to go to "📁 Data Upload"
+2. **Upload Dataset**: Upload CSV or Excel files (supports .csv, .xlsx, .xls)
+3. **Explore Data**: View dataset with pagination (25/50/100/200 rows per page)
+4. **Quality Analysis**: Review data quality report with recommendations
+5. **Prepare for ML**: Select target column and split ratios
+6. **Use in Analysis**: Switch back to Model Analysis to use your uploaded dataset
+
+#### Sample Datasets
+Create sample datasets for testing:
+```bash
+python scripts/create_sample_data.py
+```
+This creates three sample datasets:
+- `sample_customer_churn.csv` - Customer churn prediction
+- `sample_product_quality.csv` - Product quality classification  
+- `sample_employee_performance.csv` - Employee performance rating
 
 ## 🧪 Testing
 
